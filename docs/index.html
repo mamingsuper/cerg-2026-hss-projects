@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CERG 2026 HSS Project Finder</title>
+    <meta
+      name="description"
+      content="Search and filter 2026/27 RGC General Research Fund projects in Humanities and Social Sciences."
+    />
+    <style>
+      :root {
+        --ink: #18201d;
+        --muted: #5f6a63;
+        --faint: #8c978f;
+        --paper: #f7f5ef;
+        --panel: #fffcf4;
+        --line: #d7d0bf;
+        --line-strong: #b8ae96;
+        --accent: #0d6f63;
+        --accent-soft: #d8eee9;
+        --ochre: #a86818;
+        --shadow: 0 18px 42px rgba(47, 43, 34, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          linear-gradient(90deg, rgba(24, 32, 29, 0.04) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(24, 32, 29, 0.035) 1px, transparent 1px),
+          var(--paper);
+        background-size: 34px 34px;
+        color: var(--ink);
+        font-family:
+          Charter, "Iowan Old Style", "Noto Serif", Georgia, "PingFang TC",
+          "Microsoft JhengHei", serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .app-shell {
+        width: min(1720px, 100%);
+        margin: 0 auto;
+        padding: clamp(18px, 3vw, 42px);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+        gap: clamp(24px, 5vw, 78px);
+        align-items: end;
+        min-height: 270px;
+        padding: clamp(18px, 3vw, 36px) 0 clamp(26px, 5vw, 56px);
+        border-bottom: 2px solid var(--ink);
+      }
+
+      .eyebrow,
+      .rail-title,
+      .results-header p,
+      label span,
+      .detail-topline,
+      .project-number,
+      dt {
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0 0 18px;
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      h1 {
+        max-width: 900px;
+        margin: 0;
+        font-size: clamp(2.7rem, 6vw, 6.4rem);
+        font-weight: 620;
+        letter-spacing: 0;
+        line-height: 0.92;
+      }
+
+      .hero-copy {
+        max-width: 620px;
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: clamp(1rem, 1.45vw, 1.25rem);
+        line-height: 1.7;
+      }
+
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border: 1px solid var(--line-strong);
+        background: color-mix(in srgb, var(--panel) 86%, transparent);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-stats div {
+        min-width: 0;
+        padding: clamp(16px, 2.2vw, 26px);
+        border-right: 1px solid var(--line);
+      }
+
+      .hero-stats div:last-child {
+        border-right: 0;
+      }
+
+      .hero-stats strong {
+        display: block;
+        color: var(--accent);
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        font-size: clamp(1.4rem, 2.4vw, 2.25rem);
+        font-weight: 760;
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+      }
+
+      .hero-stats span {
+        display: block;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .controls {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: minmax(240px, 1.7fr) repeat(4, minmax(150px, 1fr)) auto;
+        gap: 10px;
+        align-items: end;
+        padding: 14px 0;
+        background: color-mix(in srgb, var(--paper) 92%, transparent);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      label {
+        display: grid;
+        gap: 7px;
+      }
+
+      label span {
+        color: var(--muted);
+        font-size: 0.65rem;
+        font-weight: 800;
+      }
+
+      input,
+      select {
+        width: 100%;
+        height: 43px;
+        border: 1px solid var(--line-strong);
+        border-radius: 0;
+        background: var(--panel);
+        color: var(--ink);
+        outline: none;
+        padding: 0 12px;
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        font-size: 0.9rem;
+      }
+
+      input:focus,
+      select:focus,
+      button:focus-visible,
+      a:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--accent) 32%, transparent);
+        outline-offset: 2px;
+      }
+
+      .reset-button,
+      .abstract-toggle,
+      .source-link {
+        min-height: 43px;
+        border: 1px solid var(--ink);
+        background: var(--ink);
+        color: var(--panel);
+        padding: 0 18px;
+        text-decoration: none;
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1.35fr) minmax(360px, 0.9fr);
+        gap: 18px;
+        align-items: start;
+        margin-top: 18px;
+      }
+
+      .subject-rail,
+      .results,
+      .detail-pane {
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+      }
+
+      .subject-rail,
+      .detail-pane {
+        position: sticky;
+        top: 88px;
+      }
+
+      .subject-rail {
+        padding: 16px;
+      }
+
+      .rail-title {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+      }
+
+      .rail-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        width: 100%;
+        margin-top: 8px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+        padding: 12px;
+        text-align: left;
+      }
+
+      .rail-item span {
+        font-size: 0.92rem;
+        line-height: 1.25;
+      }
+
+      .rail-item strong {
+        color: var(--ochre);
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      .rail-item.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px;
+        border-bottom: 1px solid var(--line-strong);
+      }
+
+      .results-header p {
+        margin: 0 0 4px;
+        color: var(--accent);
+        font-size: 0.7rem;
+        font-weight: 800;
+      }
+
+      .results-header h2 {
+        margin: 0;
+        font-size: clamp(1.25rem, 2vw, 1.8rem);
+        font-weight: 620;
+      }
+
+      .results-header > span {
+        align-self: start;
+        color: var(--ochre);
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .project-list {
+        max-height: calc(100vh - 190px);
+        overflow: auto;
+      }
+
+      .project-row {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr) 190px;
+        gap: 14px;
+        width: 100%;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+        padding: 14px 18px;
+        text-align: left;
+      }
+
+      .project-row:hover,
+      .project-row.selected {
+        background: color-mix(in srgb, var(--accent-soft) 72%, var(--panel));
+      }
+
+      .project-number {
+        color: var(--accent);
+        font-size: 0.74rem;
+        font-weight: 850;
+      }
+
+      .project-main {
+        min-width: 0;
+      }
+
+      .project-main strong {
+        display: block;
+        font-size: 0.98rem;
+        font-weight: 640;
+        line-height: 1.35;
+      }
+
+      .project-main small {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.35;
+      }
+
+      .project-meta {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        justify-items: end;
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        text-align: right;
+      }
+
+      .project-meta em {
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-style: normal;
+      }
+
+      .project-meta b {
+        color: var(--ochre);
+        font-size: 0.9rem;
+      }
+
+      .detail-pane {
+        max-height: calc(100vh - 106px);
+        overflow: auto;
+        padding: clamp(18px, 2.2vw, 28px);
+      }
+
+      .detail-topline {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        color: var(--accent);
+        font-size: 0.7rem;
+        font-weight: 850;
+      }
+
+      .detail-pane h2 {
+        margin: 18px 0 0;
+        font-size: clamp(1.45rem, 2.5vw, 2.35rem);
+        font-weight: 620;
+        line-height: 1.08;
+      }
+
+      .chinese-title {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1px;
+        margin: 24px 0;
+        border: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .detail-grid div {
+        min-width: 0;
+        background: var(--panel);
+        padding: 13px;
+      }
+
+      dt {
+        color: var(--faint);
+        font-size: 0.62rem;
+        font-weight: 850;
+      }
+
+      dd {
+        margin: 6px 0 0;
+        font-size: 0.95rem;
+        line-height: 1.35;
+      }
+
+      .text-block {
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+        margin-top: 18px;
+      }
+
+      .text-block h3,
+      .empty-state h3 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .text-block p,
+      .empty-state p,
+      .abstract-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+      }
+
+      .abstract-toggle {
+        width: 100%;
+      }
+
+      .abstract-text {
+        margin-top: 14px;
+      }
+
+      .source-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 18px;
+        background: transparent;
+        color: var(--ink);
+      }
+
+      .empty-state {
+        padding: 28px;
+      }
+
+      @media (max-width: 1180px) {
+        .hero,
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .controls {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .search-box {
+          grid-column: 1 / -1;
+        }
+
+        .subject-rail,
+        .detail-pane {
+          position: static;
+        }
+
+        .subject-rail {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+
+        .rail-title {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .app-shell {
+          padding: 14px;
+        }
+
+        .hero {
+          min-height: 0;
+        }
+
+        .hero-stats,
+        .controls,
+        .subject-rail,
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .controls {
+          position: static;
+        }
+
+        .project-list,
+        .detail-pane {
+          max-height: none;
+        }
+
+        .project-row {
+          grid-template-columns: 1fr;
+        }
+
+        .project-meta {
+          justify-items: start;
+          text-align: left;
+        }
+
+        .results-header {
+          display: grid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">RGC CERG / GRF 2026-27</p>
+          <h1>Humanities and Social Sciences Project Finder</h1>
+          <p class="hero-copy">
+            361 个新获批项目，按关键词、学科、院校和资助金额快速检索。
+          </p>
+        </div>
+        <div class="hero-stats" aria-label="dataset summary">
+          <div>
+            <strong id="stat-projects">...</strong>
+            <span>projects</span>
+          </div>
+          <div>
+            <strong id="stat-subjects">...</strong>
+            <span>subject areas</span>
+          </div>
+          <div>
+            <strong id="stat-funding">...</strong>
+            <span>shown funding</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="project filters">
+        <label class="search-box">
+          <span>Search</span>
+          <input id="query" placeholder="题名、PI、院校、关键词、项目编号" />
+        </label>
+        <label>
+          <span>Subject</span>
+          <select id="subject"></select>
+        </label>
+        <label>
+          <span>Institution</span>
+          <select id="institution"></select>
+        </label>
+        <label>
+          <span>Status</span>
+          <select id="status"></select>
+        </label>
+        <label>
+          <span>Sort</span>
+          <select id="sort">
+            <option value="number">Project number</option>
+            <option value="fund-desc">Funding high to low</option>
+            <option value="fund-asc">Funding low to high</option>
+            <option value="title">Title A-Z</option>
+          </select>
+        </label>
+        <button class="reset-button" id="reset" type="button">Reset</button>
+      </section>
+
+      <section class="workspace">
+        <aside class="subject-rail" aria-label="subject area counts">
+          <p class="rail-title">Subject areas</p>
+          <div id="subject-rail"></div>
+        </aside>
+
+        <section class="results" aria-label="project results">
+          <div class="results-header">
+            <div>
+              <p><span id="result-count">0</span> results</p>
+              <h2 id="result-title">All HSS projects</h2>
+            </div>
+            <span id="result-funding">...</span>
+          </div>
+          <div class="project-list" id="project-list"></div>
+        </section>
+
+        <aside class="detail-pane" aria-label="selected project details" id="detail-pane">
+          <div class="empty-state">
+            <h3>Loading projects</h3>
+            <p>项目详情会显示在这里。</p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const ALL = "全部";
+      let projects = [];
+      let filtered = [];
+      let selectedNumber = null;
+      let showAbstract = false;
+
+      const state = {
+        query: "",
+        subject: ALL,
+        institution: ALL,
+        status: ALL,
+        sort: "number",
+      };
+
+      const el = {
+        query: document.getElementById("query"),
+        subject: document.getElementById("subject"),
+        institution: document.getElementById("institution"),
+        status: document.getElementById("status"),
+        sort: document.getElementById("sort"),
+        reset: document.getElementById("reset"),
+        statProjects: document.getElementById("stat-projects"),
+        statSubjects: document.getElementById("stat-subjects"),
+        statFunding: document.getElementById("stat-funding"),
+        subjectRail: document.getElementById("subject-rail"),
+        resultCount: document.getElementById("result-count"),
+        resultTitle: document.getElementById("result-title"),
+        resultFunding: document.getElementById("result-funding"),
+        projectList: document.getElementById("project-list"),
+        detailPane: document.getElementById("detail-pane"),
+      };
+
+      function uniqueValues(key) {
+        return [...new Set(projects.map((project) => String(project[key] || "").trim()))]
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b));
+      }
+
+      function money(value) {
+        return value ? `HK$${value.toLocaleString("en-US")}` : "未列明";
+      }
+
+      function normalize(value) {
+        return String(value || "").toLocaleLowerCase().replace(/\s+/g, " ").trim();
+      }
+
+      function searchText(project) {
+        return normalize(
+          [
+            project.projectNumber,
+            project.titleEnglish,
+            project.titleChinese,
+            project.principalInvestigatorEnglish,
+            project.principalInvestigatorChinese,
+            project.department,
+            project.institution,
+            project.coInvestigators,
+            project.subjectArea,
+            project.abstract,
+          ].join(" "),
+        );
+      }
+
+      function setOptions(select, values) {
+        select.innerHTML = [ALL, ...values]
+          .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`)
+          .join("");
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function applyFilters() {
+        const terms = normalize(state.query).split(" ").filter(Boolean);
+        filtered = projects.filter((project) => {
+          if (state.subject !== ALL && project.subjectArea !== state.subject) return false;
+          if (state.institution !== ALL && project.institution !== state.institution) return false;
+          if (state.status !== ALL && project.projectStatus !== state.status) return false;
+          if (!terms.length) return true;
+          const haystack = searchText(project);
+          return terms.every((term) => haystack.includes(term));
+        });
+
+        filtered.sort((a, b) => {
+          if (state.sort === "fund-desc") {
+            return (b.fundApprovedNumber || 0) - (a.fundApprovedNumber || 0);
+          }
+          if (state.sort === "fund-asc") {
+            return (a.fundApprovedNumber || 0) - (b.fundApprovedNumber || 0);
+          }
+          if (state.sort === "title") {
+            return String(a.titleEnglish).localeCompare(String(b.titleEnglish));
+          }
+          return String(a.projectNumber).localeCompare(String(b.projectNumber));
+        });
+
+        if (!filtered.some((project) => project.projectNumber === selectedNumber)) {
+          selectedNumber = filtered[0]?.projectNumber || null;
+          showAbstract = false;
+        }
+      }
+
+      function totalFunding(rows) {
+        return rows.reduce((sum, project) => sum + (project.fundApprovedNumber || 0), 0);
+      }
+
+      function renderStats() {
+        const subjects = uniqueValues("subjectArea");
+        el.statProjects.textContent = projects.length;
+        el.statSubjects.textContent = subjects.length;
+        el.statFunding.textContent = money(totalFunding(filtered));
+      }
+
+      function renderRail() {
+        const subjects = uniqueValues("subjectArea").map((name) => ({
+          name,
+          count: projects.filter((project) => project.subjectArea === name).length,
+        }));
+
+        el.subjectRail.innerHTML = subjects
+          .map(
+            (item) => `
+              <button class="rail-item ${state.subject === item.name ? "active" : ""}" data-subject="${escapeHtml(item.name)}" type="button">
+                <span>${escapeHtml(item.name)}</span>
+                <strong>${item.count}</strong>
+              </button>
+            `,
+          )
+          .join("");
+
+        el.subjectRail.querySelectorAll("button").forEach((button) => {
+          button.addEventListener("click", () => {
+            const value = button.dataset.subject;
+            state.subject = state.subject === value ? ALL : value;
+            el.subject.value = state.subject;
+            update();
+          });
+        });
+      }
+
+      function renderResults() {
+        el.resultCount.textContent = filtered.length;
+        el.resultTitle.textContent = state.subject === ALL ? "All HSS projects" : state.subject;
+        el.resultFunding.textContent = money(totalFunding(filtered));
+
+        if (!filtered.length) {
+          el.projectList.innerHTML = `
+            <div class="empty-state">
+              <h3>No matching projects</h3>
+              <p>换一个关键词，或重置筛选条件。</p>
+            </div>
+          `;
+          return;
+        }
+
+        el.projectList.innerHTML = filtered
+          .map(
+            (project) => `
+              <button class="project-row ${selectedNumber === project.projectNumber ? "selected" : ""}" data-project="${escapeHtml(project.projectNumber)}" type="button">
+                <span class="project-number">${escapeHtml(project.projectNumber)}</span>
+                <span class="project-main">
+                  <strong>${escapeHtml(project.titleEnglish || project.titleChinese)}</strong>
+                  <small>${escapeHtml(project.principalInvestigatorEnglish)} · ${escapeHtml(project.institution)}</small>
+                </span>
+                <span class="project-meta">
+                  <em>${escapeHtml(project.subjectArea)}</em>
+                  <b>${money(project.fundApprovedNumber)}</b>
+                </span>
+              </button>
+            `,
+          )
+          .join("");
+
+        el.projectList.querySelectorAll("button").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedNumber = button.dataset.project;
+            showAbstract = false;
+            renderResults();
+            renderDetail();
+          });
+        });
+      }
+
+      function renderDetail() {
+        const selected =
+          filtered.find((project) => project.projectNumber === selectedNumber) || filtered[0];
+
+        if (!selected) {
+          el.detailPane.innerHTML = `
+            <div class="empty-state">
+              <h3>Select a project</h3>
+              <p>项目详情会显示在这里。</p>
+            </div>
+          `;
+          return;
+        }
+
+        el.detailPane.innerHTML = `
+          <div class="detail-topline">
+            <span>${escapeHtml(selected.projectNumber)}</span>
+            <span>${escapeHtml(selected.projectStatus)}</span>
+          </div>
+          <h2>${escapeHtml(selected.titleEnglish || selected.titleChinese)}</h2>
+          ${
+            selected.titleChinese && selected.titleChinese !== selected.titleEnglish
+              ? `<p class="chinese-title">${escapeHtml(selected.titleChinese)}</p>`
+              : ""
+          }
+          <dl class="detail-grid">
+            <div><dt>PI</dt><dd>${escapeHtml(selected.principalInvestigatorEnglish || "未列明")}</dd></div>
+            <div><dt>Institution</dt><dd>${escapeHtml(selected.institution || "未列明")}</dd></div>
+            <div><dt>Department</dt><dd>${escapeHtml(selected.department || "未列明")}</dd></div>
+            <div><dt>Subject</dt><dd>${escapeHtml(selected.subjectArea || "未列明")}</dd></div>
+            <div><dt>Funding</dt><dd>${money(selected.fundApprovedNumber)}</dd></div>
+            <div><dt>Exercise year</dt><dd>${escapeHtml(selected.exerciseYear || "2026 / 27")}</dd></div>
+          </dl>
+          ${
+            selected.coInvestigators
+              ? `<section class="text-block"><h3>Co-investigators</h3><p>${escapeHtml(selected.coInvestigators)}</p></section>`
+              : ""
+          }
+          <section class="text-block">
+            <button class="abstract-toggle" id="abstract-toggle" type="button">
+              ${showAbstract ? "Hide abstract" : "Show abstract"}
+            </button>
+            ${
+              showAbstract
+                ? `<p class="abstract-text">${escapeHtml(selected.abstract || "No abstract available.")}</p>`
+                : ""
+            }
+          </section>
+          <a class="source-link" href="${escapeHtml(selected.sourceUrl)}" target="_blank" rel="noreferrer">
+            Open RGC detail page
+          </a>
+        `;
+
+        document.getElementById("abstract-toggle").addEventListener("click", () => {
+          showAbstract = !showAbstract;
+          renderDetail();
+        });
+      }
+
+      function update() {
+        applyFilters();
+        renderStats();
+        renderRail();
+        renderResults();
+        renderDetail();
+      }
+
+      function bindControls() {
+        el.query.addEventListener("input", (event) => {
+          state.query = event.target.value;
+          update();
+        });
+        el.subject.addEventListener("change", (event) => {
+          state.subject = event.target.value;
+          update();
+        });
+        el.institution.addEventListener("change", (event) => {
+          state.institution = event.target.value;
+          update();
+        });
+        el.status.addEventListener("change", (event) => {
+          state.status = event.target.value;
+          update();
+        });
+        el.sort.addEventListener("change", (event) => {
+          state.sort = event.target.value;
+          update();
+        });
+        el.reset.addEventListener("click", () => {
+          state.query = "";
+          state.subject = ALL;
+          state.institution = ALL;
+          state.status = ALL;
+          state.sort = "number";
+          el.query.value = "";
+          el.subject.value = ALL;
+          el.institution.value = ALL;
+          el.status.value = ALL;
+          el.sort.value = "number";
+          update();
+        });
+      }
+
+      async function init() {
+        projects = await fetch("projects.json").then((response) => response.json());
+        selectedNumber = projects[0]?.projectNumber || null;
+        setOptions(el.subject, uniqueValues("subjectArea"));
+        setOptions(el.institution, uniqueValues("institution"));
+        setOptions(el.status, uniqueValues("projectStatus"));
+        bindControls();
+        update();
+      }
+
+      init().catch((error) => {
+        console.error(error);
+        el.detailPane.innerHTML = `
+          <div class="empty-state">
+            <h3>Could not load data</h3>
+            <p>请刷新页面再试。</p>
+          </div>
+        `;
+      });
+    </script>
+  </body>
+</html>
