@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CERG 2026 HSS Project Finder",
+  title: "CERG 2026 Project Finder",
   description:
-    "Search and filter 2026/27 RGC General Research Fund projects in Humanities and Social Sciences.",
+    "Search and filter all 2026/27 RGC General Research Fund projects by official panel and subject area.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

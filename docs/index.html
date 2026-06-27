@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CERG 2026 HSS Project Finder</title>
+    <title>CERG 2026 Project Finder</title>
     <meta
       name="description"
-      content="Search and filter 2026/27 RGC General Research Fund projects in Humanities and Social Sciences."
+      content="Search and filter all 2026/27 RGC General Research Fund projects by official panel and subject area."
     />
     <style>
       :root {
@@ -105,6 +105,23 @@
         line-height: 1.7;
       }
 
+      .download-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 40px;
+        margin-top: 18px;
+        border: 1px solid var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 0 14px;
+        text-decoration: none;
+        font-family:
+          "Avenir Next", "Gill Sans", "Trebuchet MS", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        font-size: 0.88rem;
+        font-weight: 800;
+      }
+
       .hero-stats {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -147,7 +164,7 @@
         top: 0;
         z-index: 5;
         display: grid;
-        grid-template-columns: minmax(240px, 1.7fr) repeat(4, minmax(150px, 1fr)) auto;
+        grid-template-columns: minmax(240px, 1.7fr) repeat(5, minmax(145px, 1fr)) auto;
         gap: 10px;
         align-items: end;
         padding: 14px 0;
@@ -543,10 +560,13 @@
       <section class="hero">
         <div>
           <p class="eyebrow">RGC CERG / GRF 2026-27</p>
-          <h1>Humanities and Social Sciences Project Finder</h1>
+          <h1>General Research Fund Project Finder</h1>
           <p class="hero-copy">
-            361 个新获批项目，按关键词、学科、院校和资助金额快速检索。
+            1493 个 2026/27 年度新获批项目，按官网 Panel、Subject Area、院校、PI、关键词和资助金额快速检索。
           </p>
+          <a class="download-link" href="cerg_2026_all_subjects_projects.xlsx">
+            Download Excel dataset
+          </a>
         </div>
         <div class="hero-stats" aria-label="dataset summary">
           <div>
@@ -568,6 +588,10 @@
         <label class="search-box">
           <span>Search</span>
           <input id="query" placeholder="题名、PI、院校、关键词、项目编号" />
+        </label>
+        <label>
+          <span>Panel</span>
+          <select id="panel"></select>
         </label>
         <label>
           <span>Subject</span>
@@ -594,8 +618,8 @@
       </section>
 
       <section class="workspace">
-        <aside class="subject-rail" aria-label="subject area counts">
-          <p class="rail-title">Subject areas</p>
+        <aside class="subject-rail" aria-label="official panel counts">
+          <p class="rail-title">Official panels</p>
           <div id="subject-rail"></div>
         </aside>
 
@@ -603,7 +627,7 @@
           <div class="results-header">
             <div>
               <p><span id="result-count">0</span> results</p>
-              <h2 id="result-title">All HSS projects</h2>
+              <h2 id="result-title">All 2026 projects</h2>
             </div>
             <span id="result-funding">...</span>
           </div>
@@ -628,6 +652,7 @@
 
       const state = {
         query: "",
+        panel: ALL,
         subject: ALL,
         institution: ALL,
         status: ALL,
@@ -636,6 +661,7 @@
 
       const el = {
         query: document.getElementById("query"),
+        panel: document.getElementById("panel"),
         subject: document.getElementById("subject"),
         institution: document.getElementById("institution"),
         status: document.getElementById("status"),
@@ -701,6 +727,7 @@
       function applyFilters() {
         const terms = normalize(state.query).split(" ").filter(Boolean);
         filtered = projects.filter((project) => {
+          if (state.panel !== ALL && project.panel !== state.panel) return false;
           if (state.subject !== ALL && project.subjectArea !== state.subject) return false;
           if (state.institution !== ALL && project.institution !== state.institution) return false;
           if (state.status !== ALL && project.projectStatus !== state.status) return false;
@@ -740,15 +767,15 @@
       }
 
       function renderRail() {
-        const subjects = uniqueValues("subjectArea").map((name) => ({
+        const panels = uniqueValues("panel").map((name) => ({
           name,
-          count: projects.filter((project) => project.subjectArea === name).length,
+          count: projects.filter((project) => project.panel === name).length,
         }));
 
-        el.subjectRail.innerHTML = subjects
+        el.subjectRail.innerHTML = panels
           .map(
             (item) => `
-              <button class="rail-item ${state.subject === item.name ? "active" : ""}" data-subject="${escapeHtml(item.name)}" type="button">
+              <button class="rail-item ${state.panel === item.name ? "active" : ""}" data-panel="${escapeHtml(item.name)}" type="button">
                 <span>${escapeHtml(item.name)}</span>
                 <strong>${item.count}</strong>
               </button>
@@ -758,9 +785,9 @@
 
         el.subjectRail.querySelectorAll("button").forEach((button) => {
           button.addEventListener("click", () => {
-            const value = button.dataset.subject;
-            state.subject = state.subject === value ? ALL : value;
-            el.subject.value = state.subject;
+            const value = button.dataset.panel;
+            state.panel = state.panel === value ? ALL : value;
+            el.panel.value = state.panel;
             update();
           });
         });
@@ -768,7 +795,7 @@
 
       function renderResults() {
         el.resultCount.textContent = filtered.length;
-        el.resultTitle.textContent = state.subject === ALL ? "All HSS projects" : state.subject;
+        el.resultTitle.textContent = state.panel === ALL ? "All 2026 projects" : state.panel;
         el.resultFunding.textContent = money(totalFunding(filtered));
 
         if (!filtered.length) {
@@ -838,6 +865,7 @@
             <div><dt>PI</dt><dd>${escapeHtml(selected.principalInvestigatorEnglish || "未列明")}</dd></div>
             <div><dt>Institution</dt><dd>${escapeHtml(selected.institution || "未列明")}</dd></div>
             <div><dt>Department</dt><dd>${escapeHtml(selected.department || "未列明")}</dd></div>
+            <div><dt>Panel</dt><dd>${escapeHtml(selected.panel || "未列明")}</dd></div>
             <div><dt>Subject</dt><dd>${escapeHtml(selected.subjectArea || "未列明")}</dd></div>
             <div><dt>Funding</dt><dd>${money(selected.fundApprovedNumber)}</dd></div>
             <div><dt>Exercise year</dt><dd>${escapeHtml(selected.exerciseYear || "2026 / 27")}</dd></div>
@@ -881,6 +909,10 @@
           state.query = event.target.value;
           update();
         });
+        el.panel.addEventListener("change", (event) => {
+          state.panel = event.target.value;
+          update();
+        });
         el.subject.addEventListener("change", (event) => {
           state.subject = event.target.value;
           update();
@@ -899,11 +931,13 @@
         });
         el.reset.addEventListener("click", () => {
           state.query = "";
+          state.panel = ALL;
           state.subject = ALL;
           state.institution = ALL;
           state.status = ALL;
           state.sort = "number";
           el.query.value = "";
+          el.panel.value = ALL;
           el.subject.value = ALL;
           el.institution.value = ALL;
           el.status.value = ALL;
@@ -915,6 +949,7 @@
       async function init() {
         projects = await fetch("projects.json").then((response) => response.json());
         selectedNumber = projects[0]?.projectNumber || null;
+        setOptions(el.panel, uniqueValues("panel"));
         setOptions(el.subject, uniqueValues("subjectArea"));
         setOptions(el.institution, uniqueValues("institution"));
         setOptions(el.status, uniqueValues("projectStatus"));

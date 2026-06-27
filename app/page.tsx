@@ -66,6 +66,7 @@ function getSearchText(project: Project) {
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [query, setQuery] = useState("");
+  const [panel, setPanel] = useState(ALL);
   const [subject, setSubject] = useState(ALL);
   const [institution, setInstitution] = useState(ALL);
   const [status, setStatus] = useState(ALL);
@@ -82,6 +83,7 @@ export default function Home() {
       });
   }, []);
 
+  const panels = useMemo(() => uniqueValues(projects, "panel"), [projects]);
   const subjects = useMemo(() => uniqueValues(projects, "subjectArea"), [projects]);
   const institutions = useMemo(
     () => uniqueValues(projects, "institution"),
@@ -97,6 +99,7 @@ export default function Home() {
       .split(" ")
       .filter(Boolean);
     const rows = projects.filter((project) => {
+      if (panel !== ALL && project.panel !== panel) return false;
       if (subject !== ALL && project.subjectArea !== subject) return false;
       if (institution !== ALL && project.institution !== institution) return false;
       if (status !== ALL && project.projectStatus !== status) return false;
@@ -117,7 +120,7 @@ export default function Home() {
       }
       return a.projectNumber.localeCompare(b.projectNumber);
     });
-  }, [projects, query, subject, institution, status, sortMode]);
+  }, [projects, query, panel, subject, institution, status, sortMode]);
 
   const selected = useMemo(() => {
     return (
@@ -131,15 +134,16 @@ export default function Home() {
     return filtered.reduce((sum, project) => sum + (project.fundApprovedNumber ?? 0), 0);
   }, [filtered]);
 
-  const subjectCounts = useMemo(() => {
-    return subjects.map((name) => ({
+  const panelCounts = useMemo(() => {
+    return panels.map((name) => ({
       name,
-      count: projects.filter((project) => project.subjectArea === name).length,
+      count: projects.filter((project) => project.panel === name).length,
     }));
-  }, [projects, subjects]);
+  }, [projects, panels]);
 
   function resetFilters() {
     setQuery("");
+    setPanel(ALL);
     setSubject(ALL);
     setInstitution(ALL);
     setStatus(ALL);
@@ -151,10 +155,13 @@ export default function Home() {
       <section className="hero">
         <div>
           <p className="eyebrow">RGC CERG / GRF 2026-27</p>
-          <h1>Humanities and Social Sciences Project Finder</h1>
+          <h1>General Research Fund Project Finder</h1>
           <p className="hero-copy">
-            361 个新获批项目，按关键词、学科、院校和资助金额快速检索。
+            1493 个 2026/27 年度新获批项目，按官网 Panel、Subject Area、院校、PI、关键词和资助金额快速检索。
           </p>
+          <a className="download-link" href="/cerg_2026_all_subjects_projects.xlsx">
+            Download Excel dataset
+          </a>
         </div>
         <div className="hero-stats" aria-label="dataset summary">
           <div>
@@ -180,6 +187,15 @@ export default function Home() {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="题名、PI、院校、关键词、项目编号"
           />
+        </label>
+        <label>
+          <span>Panel</span>
+          <select value={panel} onChange={(event) => setPanel(event.target.value)}>
+            <option>{ALL}</option>
+            {panels.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
         </label>
         <label>
           <span>Subject</span>
@@ -229,13 +245,13 @@ export default function Home() {
       </section>
 
       <section className="workspace">
-        <aside className="subject-rail" aria-label="subject area counts">
-          <p className="rail-title">Subject areas</p>
-          {subjectCounts.map((item) => (
+        <aside className="subject-rail" aria-label="official panel counts">
+          <p className="rail-title">Official panels</p>
+          {panelCounts.map((item) => (
             <button
               key={item.name}
-              className={subject === item.name ? "rail-item active" : "rail-item"}
-              onClick={() => setSubject(subject === item.name ? ALL : item.name)}
+              className={panel === item.name ? "rail-item active" : "rail-item"}
+              onClick={() => setPanel(panel === item.name ? ALL : item.name)}
               type="button"
             >
               <span>{item.name}</span>
@@ -248,7 +264,7 @@ export default function Home() {
           <div className="results-header">
             <div>
               <p>{filtered.length} results</p>
-              <h2>{subject === ALL ? "All HSS projects" : subject}</h2>
+              <h2>{panel === ALL ? "All 2026 projects" : panel}</h2>
             </div>
             <span>{formatMoney(totalFunding || null)}</span>
           </div>
@@ -314,6 +330,10 @@ export default function Home() {
                 <div>
                   <dt>Department</dt>
                   <dd>{selected.department || "未列明"}</dd>
+                </div>
+                <div>
+                  <dt>Panel</dt>
+                  <dd>{selected.panel || "未列明"}</dd>
                 </div>
                 <div>
                   <dt>Subject</dt>
