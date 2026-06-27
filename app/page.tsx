@@ -63,6 +63,28 @@ function getSearchText(project: Project) {
   );
 }
 
+async function loadProjects() {
+  const sources = [
+    "/projects.json",
+    "https://mamingsuper.github.io/cerg-2026-hss-projects/projects.json",
+    "https://raw.githubusercontent.com/mamingsuper/cerg-2026-hss-projects/main/docs/projects.json",
+  ];
+
+  let lastError: unknown;
+  for (const source of sources) {
+    try {
+      const response = await fetch(source, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      return (await response.json()) as Project[];
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [query, setQuery] = useState("");
@@ -75,8 +97,7 @@ export default function Home() {
   const [showAbstract, setShowAbstract] = useState(false);
 
   useEffect(() => {
-    fetch("/projects.json")
-      .then((response) => response.json())
+    loadProjects()
       .then((data: Project[]) => {
         setProjects(data);
         setSelectedNumber(data[0]?.projectNumber ?? null);
