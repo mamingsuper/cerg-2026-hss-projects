@@ -28,6 +28,7 @@ type Project = {
 type SortMode = "number" | "fund-desc" | "fund-asc" | "title";
 
 const ALL = "全部";
+const DATA_VERSION = "20260627-fix-json";
 
 function uniqueValues(projects: Project[], key: keyof Project) {
   return Array.from(
@@ -73,7 +74,8 @@ async function loadProjects() {
   let lastError: unknown;
   for (const source of sources) {
     try {
-      const response = await fetch(source, { cache: "no-store" });
+      const url = `${source}${source.includes("?") ? "&" : "?"}v=${DATA_VERSION}`;
+      const response = await fetch(url, { cache: "no-store" });
       if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`);
       }
