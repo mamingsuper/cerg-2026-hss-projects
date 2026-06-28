@@ -57,6 +57,7 @@ function getSearchText(project: Project) {
       project.principalInvestigatorChinese,
       project.department,
       project.institution,
+      project.fundingScheme,
       project.coInvestigators,
       project.subjectArea,
       project.abstract,
@@ -90,6 +91,7 @@ async function loadProjects() {
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [query, setQuery] = useState("");
+  const [fundingScheme, setFundingScheme] = useState(ALL);
   const [panel, setPanel] = useState(ALL);
   const [subject, setSubject] = useState(ALL);
   const [institution, setInstitution] = useState(ALL);
@@ -106,6 +108,10 @@ export default function Home() {
       });
   }, []);
 
+  const fundingSchemes = useMemo(
+    () => uniqueValues(projects, "fundingScheme"),
+    [projects],
+  );
   const panels = useMemo(() => uniqueValues(projects, "panel"), [projects]);
   const subjects = useMemo(() => uniqueValues(projects, "subjectArea"), [projects]);
   const institutions = useMemo(
@@ -122,6 +128,7 @@ export default function Home() {
       .split(" ")
       .filter(Boolean);
     const rows = projects.filter((project) => {
+      if (fundingScheme !== ALL && project.fundingScheme !== fundingScheme) return false;
       if (panel !== ALL && project.panel !== panel) return false;
       if (subject !== ALL && project.subjectArea !== subject) return false;
       if (institution !== ALL && project.institution !== institution) return false;
@@ -143,7 +150,7 @@ export default function Home() {
       }
       return a.projectNumber.localeCompare(b.projectNumber);
     });
-  }, [projects, query, panel, subject, institution, status, sortMode]);
+  }, [projects, query, fundingScheme, panel, subject, institution, status, sortMode]);
 
   const selected = useMemo(() => {
     return (
@@ -157,6 +164,13 @@ export default function Home() {
     return filtered.reduce((sum, project) => sum + (project.fundApprovedNumber ?? 0), 0);
   }, [filtered]);
 
+  const resultTitle =
+    panel !== ALL
+      ? panel
+      : fundingScheme !== ALL
+        ? fundingScheme
+        : "All 2026 projects";
+
   const panelCounts = useMemo(() => {
     return panels.map((name) => ({
       name,
@@ -166,6 +180,7 @@ export default function Home() {
 
   function resetFilters() {
     setQuery("");
+    setFundingScheme(ALL);
     setPanel(ALL);
     setSubject(ALL);
     setInstitution(ALL);
@@ -210,6 +225,18 @@ export default function Home() {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="题名、PI、院校、关键词、项目编号"
           />
+        </label>
+        <label>
+          <span>Funding Scheme</span>
+          <select
+            value={fundingScheme}
+            onChange={(event) => setFundingScheme(event.target.value)}
+          >
+            <option>{ALL}</option>
+            {fundingSchemes.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
         </label>
         <label>
           <span>Panel</span>
@@ -287,7 +314,7 @@ export default function Home() {
           <div className="results-header">
             <div>
               <p>{filtered.length} results</p>
-              <h2>{panel === ALL ? "All 2026 projects" : panel}</h2>
+              <h2>{resultTitle}</h2>
             </div>
             <span>{formatMoney(totalFunding || null)}</span>
           </div>
@@ -353,6 +380,10 @@ export default function Home() {
                 <div>
                   <dt>Department</dt>
                   <dd>{selected.department || "未列明"}</dd>
+                </div>
+                <div>
+                  <dt>Funding scheme</dt>
+                  <dd>{selected.fundingScheme || "未列明"}</dd>
                 </div>
                 <div>
                   <dt>Panel</dt>

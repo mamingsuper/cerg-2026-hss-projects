@@ -242,7 +242,7 @@
         top: 0;
         z-index: 5;
         display: grid;
-        grid-template-columns: minmax(240px, 1.7fr) repeat(5, minmax(145px, 1fr)) auto;
+        grid-template-columns: minmax(240px, 1.7fr) repeat(6, minmax(135px, 1fr)) auto;
         gap: 10px;
         align-items: end;
         padding: 14px 0;
@@ -254,6 +254,7 @@
       label {
         display: grid;
         gap: 7px;
+        min-width: 0;
       }
 
       label span {
@@ -668,6 +669,10 @@
           <input id="query" placeholder="题名、PI、院校、关键词、项目编号" />
         </label>
         <label>
+          <span>Funding Scheme</span>
+          <select id="funding-scheme"></select>
+        </label>
+        <label>
           <span>Panel</span>
           <select id="panel"></select>
         </label>
@@ -731,6 +736,7 @@
 
       const state = {
         query: "",
+        fundingScheme: ALL,
         panel: ALL,
         subject: ALL,
         institution: ALL,
@@ -740,6 +746,7 @@
 
       const el = {
         query: document.getElementById("query"),
+        fundingScheme: document.getElementById("funding-scheme"),
         panel: document.getElementById("panel"),
         subject: document.getElementById("subject"),
         institution: document.getElementById("institution"),
@@ -781,6 +788,7 @@
             project.principalInvestigatorChinese,
             project.department,
             project.institution,
+            project.fundingScheme,
             project.coInvestigators,
             project.subjectArea,
             project.abstract,
@@ -806,6 +814,7 @@
       function applyFilters() {
         const terms = normalize(state.query).split(" ").filter(Boolean);
         filtered = projects.filter((project) => {
+          if (state.fundingScheme !== ALL && project.fundingScheme !== state.fundingScheme) return false;
           if (state.panel !== ALL && project.panel !== state.panel) return false;
           if (state.subject !== ALL && project.subjectArea !== state.subject) return false;
           if (state.institution !== ALL && project.institution !== state.institution) return false;
@@ -874,7 +883,12 @@
 
       function renderResults() {
         el.resultCount.textContent = filtered.length;
-        el.resultTitle.textContent = state.panel === ALL ? "All 2026 projects" : state.panel;
+        el.resultTitle.textContent =
+          state.panel !== ALL
+            ? state.panel
+            : state.fundingScheme !== ALL
+              ? state.fundingScheme
+              : "All 2026 projects";
         el.resultFunding.textContent = money(totalFunding(filtered));
 
         if (!filtered.length) {
@@ -944,6 +958,7 @@
             <div><dt>PI</dt><dd>${escapeHtml(selected.principalInvestigatorEnglish || "未列明")}</dd></div>
             <div><dt>Institution</dt><dd>${escapeHtml(selected.institution || "未列明")}</dd></div>
             <div><dt>Department</dt><dd>${escapeHtml(selected.department || "未列明")}</dd></div>
+            <div><dt>Funding scheme</dt><dd>${escapeHtml(selected.fundingScheme || "未列明")}</dd></div>
             <div><dt>Panel</dt><dd>${escapeHtml(selected.panel || "未列明")}</dd></div>
             <div><dt>Subject</dt><dd>${escapeHtml(selected.subjectArea || "未列明")}</dd></div>
             <div><dt>Funding</dt><dd>${money(selected.fundApprovedNumber)}</dd></div>
@@ -988,6 +1003,10 @@
           state.query = event.target.value;
           update();
         });
+        el.fundingScheme.addEventListener("change", (event) => {
+          state.fundingScheme = event.target.value;
+          update();
+        });
         el.panel.addEventListener("change", (event) => {
           state.panel = event.target.value;
           update();
@@ -1010,12 +1029,14 @@
         });
         el.reset.addEventListener("click", () => {
           state.query = "";
+          state.fundingScheme = ALL;
           state.panel = ALL;
           state.subject = ALL;
           state.institution = ALL;
           state.status = ALL;
           state.sort = "number";
           el.query.value = "";
+          el.fundingScheme.value = ALL;
           el.panel.value = ALL;
           el.subject.value = ALL;
           el.institution.value = ALL;
@@ -1051,6 +1072,7 @@
       async function init() {
         projects = await loadProjects();
         selectedNumber = projects[0]?.projectNumber || null;
+        setOptions(el.fundingScheme, uniqueValues("fundingScheme"));
         setOptions(el.panel, uniqueValues("panel"));
         setOptions(el.subject, uniqueValues("subjectArea"));
         setOptions(el.institution, uniqueValues("institution"));
