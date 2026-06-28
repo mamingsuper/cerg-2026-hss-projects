@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mamingsuper.github.io/cerg-2026-hss-projects/sitemap.xml
